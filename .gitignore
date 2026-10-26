@@ -1,0 +1,10 @@
+# 依赖
+node_modules/
+
+# Cloudflare
+wrangler.toml.bak
+.dev.vars
+.wrangler/
+
+# 系统
+.DS_Store

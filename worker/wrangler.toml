@@ -1,0 +1,20 @@
+name = "muse-prompt-api"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# ============================================================
+# >>> 需要你填写的配置（部署前必读）
+# ============================================================
+# 1) DOUBAO_MODEL：豆包多模态模型标识
+#    在火山引擎方舟控制台 → 推理接入点 获取（形如 ep-xxxxxx 或模型名）。
+#    反推功能需要支持图片输入的视觉模型。
+[vars]
+DOUBAO_MODEL = ""                                   # <<< 必填：你的推理接入点 ID / 模型名
+DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"  # 一般无需修改
+ALLOWED_ORIGINS = "*"                               # 上线后建议改为 Pages 域名，如 https://muse-prompt-web.pages.dev
+
+# 2) DOUBAO_API_KEY：豆包 API 密钥 —— 绝不写在 toml / 前端里，用命令配置：
+#      wrangler secret put DOUBAO_API_KEY
+#
+# 3) V1 阶段再追加 R2 / KV 绑定，见 v1/backend-pseudocode.md 第 1 节。
+# ============================================================

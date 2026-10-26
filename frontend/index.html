@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MusePrompt · 真人向提示词工坊</title>
+  <meta name="description" content="第三方 Muse AI 提示词辅助工具：真人向图片/视频提示词生成、粘贴优化、样本库管理。与 Meta/Muse 无官方关联。" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- ===================== 顶部导航 ===================== -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-logo">🎬</span>
+      <span class="brand-name">MusePrompt</span>
+      <span class="brand-sub">真人向提示词工坊</span>
+    </div>
+    <nav class="tabs" id="mainTabs">
+      <button class="tab active" data-tab="image-gen" type="button">图片生成</button>
+      <button class="tab locked" data-tab="image-reverse" type="button">图片反推 <span class="badge-v1">V1</span></button>
+      <button class="tab" data-tab="video-gen" type="button">视频生成</button>
+      <button class="tab locked" data-tab="video-reverse" type="button">视频反推 <span class="badge-v1">V1</span></button>
+      <button class="tab" data-tab="optimize" type="button">提示词优化</button>
+      <button class="tab" data-tab="samples" type="button">Muse样本库</button>
+    </nav>
+    <div class="topbar-right">
+      <button id="modeToggle" class="mode-toggle demo" type="button" title="当前模式">演示模式</button>
+      <button id="disclaimerBtn" class="link-btn" type="button">免责声明</button>
+    </div>
+  </header>
+
+  <!-- ===================== 免责声明横幅（全站常驻） ===================== -->
+  <div class="legal-banner" id="legalBanner" role="button" tabindex="0" title="点击查看完整免责声明">
+    ⚠️ 第三方独立工具，与 Meta / Muse 无任何官方合作或关联；仅输出提示词文本，不调用 Muse 生成、不托管账号。点击查看完整免责声明。
+  </div>
+
+  <main class="layout">
+    <!-- ===================== 功能1：图片生成 ===================== -->
+    <section class="panel active" id="panel-image-gen">
+      <div class="panel-head">
+        <h2>真人感图片提示词生成</h2>
+        <p>填写人物与场景信息，生成适配 Muse Image 的真人向提示词。优先真实皮肤质感与自然光，规避 CG / 二次元质感；高危氛围词自动改写为客观神态光影描述。</p>
+      </div>
+      <div class="panel-body">
+        <div class="card form-card">
+          <div class="form-grid">
+            <div class="field span-2">
+              <label class="switch-label">
+                <input type="checkbox" id="igRef" class="switch" />
+                <span class="switch-track"><span class="switch-thumb"></span></span>
+                <span>使用参考图（锁五官 / 发型 / 服饰，仅作人物外观参考）</span>
+              </label>
+              <div class="ref-preview" id="igRefPreview" hidden></div>
+            </div>
+
+            <div class="field span-2">
+              <label for="igAppearance">人物外貌 / 穿搭 / 妆容</label>
+              <textarea id="igAppearance" maxlength="800" rows="3" placeholder="如：25岁女性，黑色长发，白衬衫配米色风衣，淡妆"></textarea>
+              <div class="frag-bar" data-frags="appearance" data-target="igAppearance"></div>
+            </div>
+
+            <div class="field">
+              <label for="igScene">场景</label>
+              <textarea id="igScene" maxlength="500" rows="2" placeholder="如：午后咖啡馆靠窗位置"></textarea>
+              <div class="frag-bar" data-frags="scene" data-target="igScene"></div>
+            </div>
+
+            <div class="field">
+              <label for="igLight">光影</label>
+              <select id="igLight">
+                <option value="柔和自然日光">柔和自然日光</option>
+                <option value="黄金时刻低角度阳光">黄金时刻</option>
+                <option value="窗边侧光">窗边侧光</option>
+                <option value="影棚柔光">影棚柔光</option>
+                <option value="霓虹夜景双色光">霓虹夜景</option>
+                <option value="烛光暖调">烛光暖调</option>
+                <option value="阴天漫射光">阴天漫射</option>
+                <option value="逆光轮廓光">逆光轮廓</option>
+              </select>
+              <input id="igLightCustom" maxlength="200" placeholder="自定义光影（可选）" />
+            </div>
+
+            <div class="field">
+              <label for="igQuality">画质质感</label>
+              <select id="igQuality">
+                <option value="真实皮肤质感，可见细微毛孔与纹理">真实皮肤质感</option>
+                <option value="电影级清晰质感，自然景深">电影级质感</option>
+                <option value="胶片颗粒质感，柔和反差">胶片颗粒</option>
+                <option value="手机直出生图感，自然随手拍">手机直出感</option>
+                <option value="杂志精修质感，细节丰富">杂志精修</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="igStyle">风格预设</label>
+              <select id="igStyle">
+                <option value="日系清新">日系清新</option>
+                <option value="韩系氛围">韩系氛围</option>
+                <option value="港风复古">港风复古</option>
+                <option value="美式街头">美式街头</option>
+                <option value="法式优雅">法式优雅</option>
+                <option value="极简高级">极简高级</option>
+                <option value="胶片写真">胶片写真</option>
+                <option value="生活纪实">生活纪实</option>
+              </select>
+            </div>
+
+            <div class="field span-2">
+              <label for="igExtra">补充描述（可选）</label>
+              <textarea id="igExtra" maxlength="800" rows="2" placeholder="额外要求，如：强调真实皮肤质感、浅景深虚化"></textarea>
+              <div class="frag-bar" data-frags="extra" data-target="igExtra"></div>
+            </div>
+
+            <div class="field span-2 form-actions">
+              <button id="igGenerate" class="btn primary" type="button">生成提示词</button>
+              <button id="igSaveTpl" class="btn ghost" type="button">保存为自定义模板</button>
+              <span class="sample-indicator" id="igSampleUsed"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="output-column">
+          <div class="card output-card" id="igOutputCard">
+            <div class="output-head">
+              <span class="output-title">输出结果</span>
+              <div class="output-actions">
+                <button id="igCopyPrompt" class="btn sm ghost" type="button">复制提示词</button>
+                <button id="igCopyNegative" class="btn sm ghost" type="button">复制负面词</button>
+                <button id="igCopyAll" class="btn sm ghost" type="button">复制全部</button>
+              </div>
+            </div>
+            <div class="demo-note" id="igDemoNote" hidden>演示模式：以下为本地拼装结果，未调用大模型。部署 Worker 后切换在线模式即可生成真实提示词。</div>
+            <div class="output-block">
+              <div class="output-label">Muse Image 提示词</div>
+              <div class="output-text" id="igPrompt"></div>
+            </div>
+            <div class="output-block">
+              <div class="output-label">负面提示词</div>
+              <div class="output-text negative" id="igNegative"></div>
+            </div>
+            <div class="tpl-row">
+              <select id="igTplSelect" class="tpl-select"><option value="">（暂无自定义模板）</option></select>
+              <button id="igTplApply" class="btn sm ghost" type="button">应用模板</button>
+              <button id="igTplDelete" class="btn sm danger-ghost" type="button">删除</button>
+            </div>
+          </div>
+
+          <div class="card log-card">
+            <div class="log-head">替换日志 <span class="log-hint">本地词库预替换 + 后端复核</span></div>
+            <ul class="log-list" id="igLog"><li class="log-empty">尚未生成</li></ul>
+          </div>
+
+          <div class="alert-blocked" id="igBlocked" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 图片反推（V1 锁定） ===================== -->
+    <section class="panel" id="panel-image-reverse">
+      <div class="panel-head">
+        <h2>真人感图片提示词反推 <span class="badge-v1">V1</span></h2>
+        <p>上传本地图片，由后端多模态模型解析画面并反推适配 Muse Image 的提示词。MVP 阶段暂不开放。</p>
+      </div>
+      <div class="locked-panel card">
+        <div class="locked-icon">🔒</div>
+        <h3>V1 版本功能</h3>
+        <ul class="locked-list">
+          <li>上传本地图片（大小受限），解析完成 R2 自动删除，不持久化用户素材</li>
+          <li>后端调用豆包多模态 API，自动脱敏改写后回填表单供二次编辑</li>
+          <li>调用额度控制（卡密次数系统）</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===================== 功能3：视频生成 ===================== -->
+    <section class="panel" id="panel-video-gen">
+      <div class="panel-head">
+        <h2>真人感视频提示词生成</h2>
+        <p>生成适配 Muse Video 的固定分段格式提示词。单镜头仅建议 1-2 个主动作；Audio 环境声音量强制低于主音乐；不使用秒数 / 分辨率数字参数，改用语言描述画质质感。</p>
+      </div>
+      <div class="panel-body">
+        <div class="card form-card">
+          <div class="form-grid">
+            <div class="field span-2">
+              <label class="switch-label">
+                <input type="checkbox" id="vgRef" class="switch" />
+                <span class="switch-track"><span class="switch-thumb"></span></span>
+                <span>使用参考图（锁五官 / 发型 / 服饰，不锁定视频首帧画面）</span>
+              </label>
+              <div class="ref-preview" id="vgRefPreview" hidden></div>
+            </div>
+
+            <div class="field span-2">
+              <label for="vgScene">场景</label>
+              <textarea id="vgScene" maxlength="500" rows="2" placeholder="如：黄昏城市天台，远处楼群与渐变天空"></textarea>
+            </div>
+
+            <div class="field span-2">
+              <label for="vgPerson">人物</label>
+              <textarea id="vgPerson" maxlength="500" rows="2" placeholder="如：25岁女性，简约通勤穿搭，低马尾"></textarea>
+            </div>
+
+            <div class="field span-2">
+              <label for="vgAction">动作（单镜头 1-2 个主动作）</label>
+              <textarea id="vgAction" maxlength="400" rows="2" placeholder="如：缓慢步行，双臂自然摆动"></textarea>
+              <div class="frag-bar" data-frags="action" data-target="vgAction"></div>
+              <div class="warn-line" id="vgActionWarn" hidden></div>
+            </div>
+
+            <div class="field">
+              <label for="vgCamera">运镜</label>
+              <select id="vgCamera">
+                <option value="固定机位，人物自然表演">固定机位</option>
+                <option value="缓慢推近至半身">缓慢推近</option>
+                <option value="环绕半身慢速旋转">环绕半身</option>
+                <option value="手持轻微晃动的跟拍">手持跟拍</option>
+                <option value="横向平移掠过场景">横向平移</option>
+                <option value="低角度仰拍">低角度仰拍</option>
+              </select>
+              <input id="vgCameraCustom" maxlength="200" placeholder="自定义运镜（可选）" />
+            </div>
+
+            <div class="field">
+              <label for="vgQuality">画质质感（文字描述，不写数字参数）</label>
+              <select id="vgQuality">
+                <option value="电影级清晰质感，自然景深">电影级质感</option>
+                <option value="胶片颗粒质感，柔和反差">胶片颗粒</option>
+                <option value="手机直出生图感，自然随手拍">手机直出感</option>
+                <option value="杂志精修质感，细节丰富">杂志精修</option>
+              </select>
+            </div>
+
+            <div class="field span-2">
+              <div class="audio-panel">
+                <div class="audio-title">
+                  <span>🎵 Audio 音频控制</span>
+                  <span class="audio-lock">已强制：环境音低于主音乐 · 抑制杂音 / 爆音 / 电流声</span>
+                </div>
+                <div class="audio-grid">
+                  <div class="field">
+                    <label for="vgMusicStyle">曲风</label>
+                    <select id="vgMusicStyle">
+                      <option value="Lo-fi">Lo-fi</option>
+                      <option value="钢琴独奏">钢琴独奏</option>
+                      <option value="City Pop">City Pop</option>
+                      <option value="氛围电子">氛围电子</option>
+                      <option value="民谣">民谣</option>
+                      <option value="爵士">爵士</option>
+                      <option value="嘻哈">嘻哈</option>
+                      <option value="摇滚">摇滚</option>
+                      <option value="无音乐（仅环境音）">无音乐（仅环境音）</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="vgBpm">BPM</label>
+                    <input id="vgBpm" type="number" min="40" max="200" step="1" placeholder="如 90" />
+                  </div>
+                  <div class="field">
+                    <label for="vgAmbient">环境音效</label>
+                    <input id="vgAmbient" maxlength="300" placeholder="如：街道环境声、轻微风声" />
+                  </div>
+                  <div class="field">
+                    <label for="vgAmbientVolume">环境音相对主音乐音量</label>
+                    <select id="vgAmbientVolume">
+                      <option value="明显低于主音乐">明显低于主音乐</option>
+                      <option value="略低于主音乐">略低于主音乐</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>抑制杂音 / 爆音 / 电流声</label>
+                    <label class="switch-label">
+                      <input type="checkbox" id="vgDenoise" class="switch" checked disabled />
+                      <span class="switch-track"><span class="switch-thumb"></span></span>
+                      <span>强制开启</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="field span-2 form-actions">
+              <button id="vgGenerate" class="btn primary" type="button">生成提示词</button>
+              <button id="vgSaveTpl" class="btn ghost" type="button">保存为自定义模板</button>
+              <span class="sample-indicator" id="vgSampleUsed"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="output-column">
+          <div class="card output-card" id="vgOutputCard">
+            <div class="output-head">
+              <span class="output-title">输出结果（Muse Video 固定分段格式）</span>
+              <div class="output-actions">
+                <button id="vgCopyPrompt" class="btn sm ghost" type="button">复制完整提示词</button>
+                <button id="vgCopyNegative" class="btn sm ghost" type="button">复制负面词</button>
+              </div>
+            </div>
+            <div class="demo-note" id="vgDemoNote" hidden>演示模式：以下为本地拼装结果，未调用大模型。部署 Worker 后切换在线模式即可生成真实提示词。</div>
+            <div class="output-block">
+              <div class="output-label">完整提示词（含 Audio / 负面段）</div>
+              <div class="output-text" id="vgPrompt"></div>
+            </div>
+            <div class="output-block">
+              <div class="output-label">负面提示词（已从分段中抽出，供单独复制）</div>
+              <div class="output-text negative" id="vgNegative"></div>
+            </div>
+            <div class="tpl-row">
+              <select id="vgTplSelect" class="tpl-select"><option value="">（暂无自定义模板）</option></select>
+              <button id="vgTplApply" class="btn sm ghost" type="button">应用模板</button>
+              <button id="vgTplDelete" class="btn sm danger-ghost" type="button">删除</button>
+            </div>
+          </div>
+
+          <div class="card log-card">
+            <div class="log-head">替换日志 <span class="log-hint">本地词库预替换 + 后端复核</span></div>
+            <ul class="log-list" id="vgLog"><li class="log-empty">尚未生成</li></ul>
+          </div>
+
+          <div class="alert-blocked" id="vgBlocked" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 视频反推（V1 锁定） ===================== -->
+    <section class="panel" id="panel-video-reverse">
+      <div class="panel-head">
+        <h2>真人感视频提示词反推 <span class="badge-v1">V1</span></h2>
+        <p>上传本地短视频，后端抽取 3-5 张关键帧送入多模态模型解析整套视频。MVP 阶段暂不开放。</p>
+      </div>
+      <div class="locked-panel card">
+        <div class="locked-icon">🔒</div>
+        <h3>V1 版本功能</h3>
+        <ul class="locked-list">
+          <li>禁止抓取网络链接；限制视频大小与时长</li>
+          <li>ffmpeg 抽取首 / 中 / 尾关键帧（共 3-5 张），完整视频不传给大模型</li>
+          <li>解析人物、场景、运镜、动作时序、光影，推测音乐与音效写入 Audio 块</li>
+          <li>素材解析完毕 R2 自动删除；调用额度控制</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===================== 功能5：提示词优化 ===================== -->
+    <section class="panel" id="panel-optimize">
+      <div class="panel-head">
+        <h2>复制粘贴提示词一键优化适配 Muse</h2>
+        <p>粘贴来自博主或其他 AI 工具的提示词，自动执行：本地脱敏词库替换 → 区分图片 / 视频 → 清理 Pika / 可灵冗余参数（帧率、秒数、宽高比等）→ 重整为 Muse 标准格式，可一键回填生成表单二次编辑。</p>
+      </div>
+      <div class="panel-body">
+        <div class="card form-card">
+          <div class="field span-2">
+            <label for="opText">粘贴原始提示词</label>
+            <textarea id="opText" maxlength="4000" rows="10" placeholder="粘贴博主 / 其他 AI 工具产出的提示词，如：&#10;一位纯欲风女孩，8s，720p，电影感，--ar 9:16 ..."></textarea>
+            <span class="char-count" id="opCharCount">0 / 4000</span>
+          </div>
+          <div class="field span-2">
+            <label>提示词类型</label>
+            <div class="radio-row">
+              <label class="radio-label"><input type="radio" name="opType" value="auto" checked /><span>自动判断</span></label>
+              <label class="radio-label"><input type="radio" name="opType" value="image" /><span>图片</span></label>
+              <label class="radio-label"><input type="radio" name="opType" value="video" /><span>视频</span></label>
+            </div>
+          </div>
+          <div class="field span-2 form-actions">
+            <button id="opRun" class="btn primary" type="button">一键优化</button>
+            <span class="sample-indicator" id="opSampleUsed"></span>
+          </div>
+        </div>
+
+        <div class="output-column">
+          <div class="card output-card" id="opOutputCard">
+            <div class="output-head">
+              <span class="output-title">优化结果</span>
+              <div class="output-actions">
+                <button id="opCopyPrompt" class="btn sm ghost" type="button">复制提示词</button>
+                <button id="opCopyAll" class="btn sm ghost" type="button">复制全部</button>
+              </div>
+            </div>
+            <div class="demo-note" id="opDemoNote" hidden>演示模式：以下为本地整理结果，未调用大模型。</div>
+            <div class="output-block">
+              <div class="output-label">Muse 标准格式提示词</div>
+              <div class="output-text" id="opPrompt"></div>
+            </div>
+            <div class="output-block">
+              <div class="output-label">负面提示词</div>
+              <div class="output-text negative" id="opNegative"></div>
+            </div>
+            <div class="backfill-row">
+              <button id="opBackfillImage" class="btn sm ghost" type="button">↩ 回填图片生成表单</button>
+              <button id="opBackfillVideo" class="btn sm ghost" type="button">↩ 回填视频生成表单</button>
+            </div>
+          </div>
+
+          <div class="card log-card">
+            <div class="log-head">替换日志 <span class="log-hint">本地词库预替换 + 后端复核</span></div>
+            <ul class="log-list" id="opLog"><li class="log-empty">尚未优化</li></ul>
+          </div>
+
+          <div class="alert-blocked" id="opBlocked" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 样本库管理 ===================== -->
+    <section class="panel" id="panel-samples">
+      <div class="panel-head">
+        <h2>Muse 提示词样本库</h2>
+        <p>收集网上实测有效的 Muse 提示词并打标签。生成 / 优化时自动挑选同分类 3-5 条作为 Few-shot 示例传给大模型，模仿博主句式与 Audio 写法（非模型微调）。MVP 阶段保存在浏览器 localStorage；V1 迁移 Cloudflare KV 云端同步。</p>
+      </div>
+      <div class="samples-layout">
+        <div class="card samples-form">
+          <h3>新增样本</h3>
+          <textarea id="spText" rows="5" placeholder="粘贴一条实测有效的 Muse 提示词（至少 10 个字符）"></textarea>
+          <div class="row">
+            <select id="spTag" class="tpl-select"></select>
+            <button id="spAdd" class="btn primary sm" type="button">保存样本</button>
+          </div>
+
+          <h3 class="mt">批量导入</h3>
+          <p class="hint">每行一条，或用 <code>---</code> 分隔；重复内容自动去重。</p>
+          <textarea id="spBulk" rows="5" placeholder="每行粘贴一条 Muse 提示词..."></textarea>
+          <div class="row">
+            <select id="spBulkTag" class="tpl-select"></select>
+            <button id="spBulkImport" class="btn primary sm" type="button">批量导入</button>
+          </div>
+
+          <h3 class="mt">数据管理</h3>
+          <div class="row">
+            <button id="spExport" class="btn ghost sm" type="button">导出 JSON（V1 迁移用）</button>
+            <button id="spClear" class="btn danger-ghost sm" type="button">清空样本库</button>
+          </div>
+        </div>
+
+        <div class="card samples-list">
+          <div class="samples-head">
+            <h3>样本列表</h3>
+            <div class="row">
+              <select id="spFilter" class="tpl-select"></select>
+              <span class="sample-total" id="spCount">共 0 条</span>
+            </div>
+          </div>
+          <ul class="sample-list" id="spList"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== 页脚免责声明 ===================== -->
+  <footer class="footer">
+    <div class="footer-disc" id="footerDisclaimer"></div>
+    <div class="footer-meta">MusePrompt · 前端 Cloudflare Pages / 后端 Cloudflare Workers + 豆包多模态 API</div>
+  </footer>
+
+  <!-- ===================== 免责声明弹窗 ===================== -->
+  <div class="modal-mask" id="disclaimerModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dmTitle">
+      <h3 id="dmTitle">免责声明</h3>
+      <div class="modal-text" id="dmText"></div>
+      <div class="modal-actions">
+        <button id="dmAccept" class="btn primary" type="button">我已阅读并理解</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
